@@ -1,0 +1,77 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[left=2cm ,text={17cm, 24cm}, top=3cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[IL2]{fontenc}
+\usepackage[slovak]{babel}
+\usepackage[unicode]{hyperref}
+\usepackage{graphics}
+\usepackage{times}
+
+\newcommand{\myuv}[1]{\quotedblbase #1\textquotedblleft}
+
+\begin{document}
+    \begin{titlepage}
+        \begin{center}
+            \Huge
+            \textsc{Vysoké učení technické v~Brně}
+            \huge
+
+            \textsc{ Fakulta informačních technologií}
+            \vspace{\stretch{0.381966}}
+
+            \LARGE IMP \,--\, Implementačná dokumentácia 
+            
+            \Huge Svetelná Tabuľa
+            \vspace{\stretch{0.618034}}
+
+        \end{center}
+        {\Large \today \hfill
+        Boris Veselý (xvesel92)}
+    \end{titlepage}
+
+    \tableofcontents
+    \newpage
+    \section{Úvod}
+        Cieľom projektu bolo implementovať svetelnú tabuľu na ktorej sa bude zobrazovať požadovaný text sprava doľava pomocou dvoch maticových displejov a FITkitu. Keďže na maticovom displeji môže svietiť len jeden stĺpec LED diód v jeden moment, budeme musieť postupne zapínať a vypínať jednotlivé stĺpce v určitej rýchlosti aby sme dosiahli očného klamu, že v daný moment svieti viac LED diód zároveň. 
+    
+        FITkit bol zapojený podľa inštrukcií získaných z prezentácie. \cite{Simek2022}.
+
+    \section{Implementácia}
+        Pri implementácii programu bola použitá a upravená kostra ktorá bola súčasťou zadania \cite{SimekKod2022} a na nastavenie a implementáciu prerušení na tlačítkach bol využitý kód z druhého cvičenia IMP.
+
+        Program pri zapnutí prechádza na spustenie hodinového podsystému, aktivácii hodín na porte E, nastaveniu pin control registeru (PCR) na porte E tak aby jednotlivé tlačítka vyvolávali interupt, následne povoľujeme prerušenie na porte E, nasleduje zapnutie hodin na vestkých portoch, nastavenie pinov maticovej dosky na general purpouse input output funkcionalitu a následné zapnutie PIT časovača. 
+
+        Po úspešnom nastavení všetkých registrov, program prechádza k vykresľovaniu prednastaveného textu. Požadovaný text je uložený v premennej, ak ale bol zvolený cez prerušenie iný text, hodnota v tejto premennej sa prepíše. Ďalej program vypočíta dĺžku požadovaného textu, na základe ktorej vytvorí pole čísiel, ktoré každé reprezentuje pozíciu na displeji pre daný znak.
+
+        Program prechádza do nekonečného cyklu v ktorom pri každej iterácii prechádza cez celý požadovaný text a vypisuje písmenká ktoré sa môžu zobraziť na obrazovke na základe ich predom vypočítanej pozície a posunu. Tak isto kontroluje pri každej iterácii či časovač dopočítal, ak časovač dopočítal program posunie text na displeji o jeden stĺpec doľava za pomoci premennej posun a spustí znovu časovač, ak ale po posune sa na displeji nebude zobrazovať posledný znak v požadovanom texte tak sa premenná posun resetuje.
+
+        Pri každom vykresľovaní znaku na displej sa kontroluje či nenastalo prerušenie. Kontrola spočíva v tom že sa do globálnej premenne uloží informácia že nastalo prerušenie. Ak nastalo tak pomocou \texttt{goto} sa z nekonečného cyklu dostávame na začiatok funkcie kde nastavíme do tejto globálnej premennej že prerušenie sme odchytili a znovu prechádzame prepísaním požadovaného textu v premennej podla stlačeného tlačítka, následným vypočítaním dĺžky požadovaného textu, priradeniu pozícii a prejdeme znovu do nekonečného cyklu. 
+
+        Jednotlivé písmenká sú uložené ako 5 celočíselných hodnôt v poli, pričom každá hodnota označuje zapnuté LED diódy ako riadky v jedom stĺpci pomocou decimálneho čísla ktoré je ďalej spracované funkciou \texttt{rows\_select()}.
+
+        Podla vyššie spomínanej kostry programu bola implementovaná funkcia \texttt{rows\_select()} ktorá podla decimálneho čísla od 0 po 255 ktoré prevedie do binárneho a na základe neho zapne alebo vypne jednotlivé LED diódy v riadkoch.
+
+        Funkcia na vypísanie znaku skontroluje či znak sa po vypísaní nejakou časťou nachádza na displeji, ak sa nenachádza tak znak nevypíše, ak sa nachádza aspoň časťou tak sa využije pozícia písmena k vypočítaniu ktoré a koľko stĺpcov písmena sa má vykresliť.  
+\newpage
+\section{Záver}
+        Cieľom projektu bolo implementovať svetelnú tabuľu na ktorej sa bude zobrazovať požadovaný text sprava doľava pomocou dvoch maticových displejov a FITkitu. Tento cieľ bol úspešne splnený. Program bol testovaný na poskytnutom hardvéri a je plne funkčný.
+
+        \subsection{Prezentácia funkčnosti projektu}
+        \href{https://www.youtube.com/watch?v=O_ysLl2uiP0}{https://www.youtube.com/watch?v=O\_ysLl2uiP0}
+        
+        \subsection{Sebahodnotenie}
+            \begin{itemize}
+                \item \textbf{Funkčnosť}: 4.7/5, 0.3 bodu som strhol za neimplementovaný input textu cez terminál, program je ale implementovaný tak že by sa to implementovalo jednoducho.
+                \item \textbf{Prístup}: 1/1
+                \item \textbf{Dokumentácia}: 4/4
+                \item \textbf{Prezentácia}: 1/1
+                \item \textbf{Kvalita}: 3/3
+            \end{itemize}
+        
+            Suma bodov podľa funkcie: $(0.25 + 0.75 * (4.7 / 5)) * (1 + 4.7 + 3 + 1 + 4) = 13.0835$
+        
+
+    \newpage
+    \bibliographystyle{czechiso}
+	\bibliography{biblia}
+\end{document}
